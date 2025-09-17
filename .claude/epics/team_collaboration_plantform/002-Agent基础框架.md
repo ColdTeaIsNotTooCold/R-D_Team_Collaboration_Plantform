@@ -1,8 +1,8 @@
 ---
 name: Agent基础框架开发 - 注册中心和简单通信机制
-status: open
+status: in_progress
 created: 2025-09-17T06:04:16Z
-updated: 2025-09-17T06:04:16Z
+updated: 2025-09-17T07:31:03Z
 github: https://github.com/ColdTeaIsNotTooCold/R-D_Team_Collaboration_Plantform/issues/3
 depends_on: [001]
 parallel: true

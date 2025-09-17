@@ -93,3 +93,51 @@
 - 执行数据库初始化：`python -m app.utils.init_data`
 - 启动API服务：`python -m app.main`
 - 访问API文档：`http://localhost:8000/docs`
+
+### 文件结构总览：
+```
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                    # FastAPI应用入口
+│   ├── models/                    # 数据库模型
+│   │   ├── __init__.py
+│   │   ├── user.py               # 用户模型
+│   │   ├── agent.py              # Agent模型
+│   │   ├── task.py               # 任务模型
+│   │   ├── context.py            # 上下文模型
+│   │   └── conversation.py       # 对话模型
+│   ├── schemas/                   # Pydantic模式
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── agent.py
+│   │   ├── task.py
+│   │   ├── context.py
+│   │   └── conversation.py
+│   ├── api/                       # API路由
+│   │   ├── __init__.py
+│   │   ├── deps.py               # 依赖注入
+│   │   ├── users.py
+│   │   ├── agents.py
+│   │   ├── tasks.py
+│   │   └── context.py
+│   ├── core/                      # 核心配置
+│   │   ├── __init__.py
+│   │   ├── config.py             # 应用配置
+│   │   ├── database.py           # 数据库配置
+│   │   ├── redis.py              # Redis配置
+│   │   └── security.py           # 安全配置
+│   └── utils/                     # 工具函数
+│       ├── __init__.py
+│       └── init_data.py          # 数据初始化
+├── alembic/                       # 数据库迁移
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/
+├── tests/                         # 测试文件
+├── requirements.txt
+├── .env.example
+└── alembic.ini
+```
+
+**问题 #2：数据库层 - 全部工作完成** ✅
