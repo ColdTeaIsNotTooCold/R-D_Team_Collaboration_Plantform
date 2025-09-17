@@ -69,6 +69,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
           {/* 消息内容 */}
           <div
+            className={`message-bubble ${isUser ? 'user-message' : isAssistant ? 'assistant-message' : 'system-message'}`}
             style={{
               padding: '12px 16px',
               borderRadius: '12px',

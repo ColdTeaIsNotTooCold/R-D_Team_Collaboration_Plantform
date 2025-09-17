@@ -146,3 +146,190 @@ body {
 .markdown-content a:hover {
   text-decoration: underline;
 }
+
+/* 响应式聊天界面 */
+.chat-container {
+  padding: 8px !important;
+}
+
+.chat-card {
+  border-radius: 8px !important;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .chat-container {
+    padding: 4px !important;
+  }
+
+  .chat-card {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .chat-header {
+    margin-bottom: 12px !important;
+  }
+
+  .agent-selector-wrapper {
+    margin-bottom: 12px !important;
+  }
+
+  .messages-wrapper {
+    margin-bottom: 12px !important;
+  }
+
+  /* 消息输入区域优化 */
+  .input-wrapper {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 8px 0;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  /* 消息气泡响应式 */
+  .message-bubble {
+    max-width: 85% !important;
+  }
+
+  /* Agent选择器响应式 */
+  .ant-select {
+    width: 100% !important;
+    margin-bottom: 8px;
+  }
+}
+
+/* 平板端适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chat-container {
+    padding: 12px !important;
+  }
+
+  .message-bubble {
+    max-width: 75% !important;
+  }
+}
+
+/* 桌面端优化 */
+@media (min-width: 1025px) {
+  .chat-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px !important;
+  }
+
+  .chat-card {
+    border-radius: 12px !important;
+  }
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .chat-container {
+    background-color: #1f1f1f;
+  }
+
+  .chat-card {
+    background-color: #2d2d2d !important;
+    border-color: #404040 !important;
+  }
+
+  .messages-wrapper {
+    background-color: #262626 !important;
+  }
+
+  .ant-card-body {
+    background-color: #2d2d2d !important;
+    color: #ffffff !important;
+  }
+
+  .ant-input,
+  .ant-select-selector {
+    background-color: #1f1f1f !important;
+    border-color: #404040 !important;
+    color: #ffffff !important;
+  }
+
+  .ant-typography {
+    color: #ffffff !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .message-bubble {
+    border: 2px solid !important;
+  }
+
+  .user-message {
+    border-color: #0066cc !important;
+  }
+
+  .assistant-message {
+    border-color: #006600 !important;
+  }
+
+  .system-message {
+    border-color: #666666 !important;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .chat-container {
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .chat-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .input-wrapper,
+  .chat-header {
+    display: none !important;
+  }
+
+  .messages-wrapper {
+    background: white !important;
+  }
+}
+
+/* 可访问性优化 */
+.chat-container:focus-within {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+.message-bubble:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 键盘导航优化 */
+.chat-container *:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 触摸设备优化 */
+@media (hover: none) {
+  .message-bubble:hover {
+    transform: none !important;
+  }
+
+  .ant-btn:hover {
+    transform: none !important;
+  }
+}

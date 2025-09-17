@@ -33,6 +33,7 @@ interface MessageInputProps {
     value: string
     description?: string
   }>
+  onQuickCommand?: (command: string) => void
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
@@ -43,7 +44,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
   loading = false,
   placeholder = '输入消息...',
   disabled = false,
-  quickCommands = []
+  quickCommands = [],
+  onQuickCommand
 }) => {
   const [files, setFiles] = useState<UploadFile[]>([])
   const textAreaRef = useRef<any>(null)
@@ -84,12 +86,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
   }
 
   const handleQuickCommand = (command: string) => {
-    onChange(command)
-    setTimeout(() => {
-      if (textAreaRef.current) {
-        textAreaRef.current.focus()
-      }
-    }, 100)
+    if (onQuickCommand) {
+      onQuickCommand(command)
+    } else {
+      onChange(command)
+      setTimeout(() => {
+        if (textAreaRef.current) {
+          textAreaRef.current.focus()
+        }
+      }, 100)
+    }
   }
 
   const quickCommandsMenu = (

@@ -1,177 +1,105 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React from 'react'
 import { Card } from 'antd'
-import type { Message, Agent } from '@/types'
-import { agentsApi } from '@/api'
-import { initWebSocket } from '@/utils/websocket'
-import { MESSAGE_ROLE } from '@/constants'
+import { useChat } from '@/hooks/useChat'
 import MessageList from '@/components/Chat/MessageList'
 import MessageInput from '@/components/Chat/MessageInput'
 import AgentSelector from '@/components/Chat/AgentSelector'
-import TypingIndicator from '@/components/Chat/TypingIndicator'
 import ConnectionStatus from '@/components/Chat/ConnectionStatus'
 
 const Chat: React.FC = () => {
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [selectedAgent, setSelectedAgent] = useState<string>('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputMessage, setInputMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [wsConnected, setWsConnected] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const wsClientRef = useRef<any>(null)
+  const {
+    agents,
+    selectedAgent,
+    messages,
+    wsConnected,
+    loading,
+    sendMessage,
+    selectAgent,
+    clearMessages,
+    reconnect,
+    getAgentName,
+    messagesEndRef
+  } = useChat({ autoConnect: true })
 
-  useEffect(() => {
-    fetchAgents()
-    initWebSocketConnection()
-    return () => {
-      if (wsClientRef.current) {
-        wsClientRef.current.disconnect()
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const fetchAgents = async () => {
-    try {
-      const data = await agentsApi.getAgents()
-      setAgents(data)
-      if (data.length > 0 && !selectedAgent) {
-        setSelectedAgent(data[0].id)
-      }
-    } catch (error) {
-      message.error('获取智能体列表失败')
-    }
-  }
-
-  const initWebSocketConnection = () => {
-    const wsClient = initWebSocket()
-    wsClientRef.current = wsClient
-
-    wsClient.on('connected', () => {
-      setWsConnected(true)
-      addSystemMessage('已连接到服务器')
-    })
-
-    wsClient.on('disconnected', () => {
-      setWsConnected(false)
-      addSystemMessage('与服务器断开连接')
-    })
-
-    wsClient.on('message', (data: any) => {
-      if (data.type === 'chat_response') {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          content: data.content,
-          role: MESSAGE_ROLE.ASSISTANT,
-          timestamp: new Date().toISOString(),
-          agentId: data.agentId
-        }])
-      }
-    })
-
-    wsClient.on('error', (error: any) => {
-      console.error('WebSocket错误:', error)
-      addSystemMessage('连接错误，请检查网络')
-    })
-  }
-
-  const addSystemMessage = (content: string) => {
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      content,
-      role: MESSAGE_ROLE.SYSTEM,
-      timestamp: new Date().toISOString()
-    }])
-  }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const [inputMessage, setInputMessage] = React.useState('')
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) {
-      message.warning('请输入消息内容')
-      return
-    }
-
-    if (!selectedAgent) {
-      message.warning('请选择智能体')
-      return
-    }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputMessage,
-      role: MESSAGE_ROLE.USER,
-      timestamp: new Date().toISOString()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInputMessage('')
-    setLoading(true)
-
-    try {
-      if (wsClientRef.current && wsClientRef.current.isConnected()) {
-        // 使用WebSocket发送消息
-        wsClientRef.current.send({
-          type: 'chat_message',
-          content: inputMessage,
-          agentId: selectedAgent,
-          timestamp: new Date().toISOString()
-        })
-      } else {
-        // 模拟回复（实际应用中应该调用API）
-        setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            content: `我收到了您的消息："${inputMessage}"。这是一个模拟回复。`,
-            role: MESSAGE_ROLE.ASSISTANT,
-            timestamp: new Date().toISOString(),
-            agentId: selectedAgent
-          }])
-        }, 1000)
-      }
-    } catch (error) {
-      message.error('发送消息失败')
-      addSystemMessage('发送消息失败，请重试')
-    } finally {
-      setLoading(false)
+    if (await sendMessage(inputMessage)) {
+      setInputMessage('')
     }
   }
 
-  
-  const getAgentName = (agentId: string) => {
-    const agent = agents.find(a => a.id === agentId)
-    return agent?.name || '未知智能体'
+  const handleQuickCommand = (command: string) => {
+    switch (command) {
+      case '帮助':
+        setInputMessage('帮助')
+        break
+      case '状态':
+        setInputMessage('状态')
+        break
+      case '清除对话':
+        clearMessages()
+        break
+      default:
+        setInputMessage(command)
+    }
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div className="chat-container" style={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '16px',
+      backgroundColor: '#f0f2f5'
+    }}>
+      <Card
+        className="chat-card"
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        }}
+        bodyStyle={{
+          padding: '16px',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* 连接状态和Agent选择 */}
-        <div style={{ marginBottom: '16px' }}>
+        <div className="chat-header" style={{ marginBottom: '16px' }}>
           <ConnectionStatus
             isConnected={wsConnected}
-            onReconnect={initWebSocketConnection}
+            onReconnect={reconnect}
           />
         </div>
 
-        <AgentSelector
-          agents={agents}
-          selectedAgent={selectedAgent}
-          onAgentChange={setSelectedAgent}
-          loading={!agents.length}
-        />
+        <div className="agent-selector-wrapper" style={{ marginBottom: '16px' }}>
+          <AgentSelector
+            agents={agents}
+            selectedAgent={selectedAgent}
+            onAgentChange={selectAgent}
+            loading={!agents.length}
+          />
+        </div>
 
         {/* 消息列表 */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div style={{
+        <div className="chat-content" style={{
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0
+        }}>
+          <div className="messages-wrapper" style={{
             flex: 1,
             overflow: 'auto',
-            marginBottom: '16px'
+            marginBottom: '16px',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa'
           }}>
             <MessageList
               messages={messages}
@@ -182,19 +110,22 @@ const Chat: React.FC = () => {
           </div>
 
           {/* 消息输入 */}
-          <MessageInput
-            value={inputMessage}
-            onChange={setInputMessage}
-            onSend={handleSendMessage}
-            loading={loading}
-            disabled={!selectedAgent}
-            placeholder={selectedAgent ? '输入消息...' : '请先选择智能体'}
-            quickCommands={[
-              { label: 'help', value: '帮助', description: '获取帮助信息' },
-              { label: 'status', value: '状态', description: '查看当前状态' },
-              { label: 'clear', value: '清除对话', description: '清除当前对话历史' }
-            ]}
-          />
+          <div className="input-wrapper">
+            <MessageInput
+              value={inputMessage}
+              onChange={setInputMessage}
+              onSend={handleSendMessage}
+              loading={loading}
+              disabled={!selectedAgent}
+              placeholder={selectedAgent ? '输入消息...' : '请先选择智能体'}
+              quickCommands={[
+                { label: 'help', value: '帮助', description: '获取帮助信息' },
+                { label: 'status', value: '状态', description: '查看当前状态' },
+                { label: 'clear', value: '清除对话', description: '清除当前对话历史' }
+              ]}
+              onQuickCommand={handleQuickCommand}
+            />
+          </div>
         </div>
       </Card>
     </div>
