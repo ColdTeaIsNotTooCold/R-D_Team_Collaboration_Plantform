@@ -17,7 +17,7 @@ from .core.vector_db import get_vector_db
 from .core.embeddings import get_embedding_generator
 from .core.executor_init import initialize_executor_services, shutdown_executor_services, get_executor_status
 from .services.llm.manager import get_llm_manager
-from .api import users, agents, tasks, context, messages, vector, executor, llm
+from .api import users, agents, tasks, context, messages, vector, executor, llm, rag
 from .api.vector import router as vector_router
 
 # 配置日志
@@ -345,6 +345,7 @@ app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
 app.include_router(vector_router, prefix="/api/v1/vector/enhanced", tags=["vector-enhanced"])
 app.include_router(executor.router, prefix="/api/v1/executor", tags=["executor"])
 app.include_router(llm.router, prefix="/api/v1/llm", tags=["llm"])
+app.include_router(rag.router, prefix="/api/v1/rag", tags=["RAG"])
 
 if __name__ == "__main__":
     import uvicorn
