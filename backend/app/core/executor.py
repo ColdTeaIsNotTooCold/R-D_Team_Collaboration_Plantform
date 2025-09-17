@@ -10,9 +10,11 @@ from sqlalchemy import and_, or_
 from ..core.database import get_db
 from ..core.redis import redis_client
 from ..core.messaging import MessagingService
+from ..models.executor import TaskExecution, ExecutionLog, ExecutionMetrics, AgentWorkload, ExecutionQueue
 from ..schemas.executor import (
     ExecutionStatus, ExecutionRequest, ExecutionResponse, ExecutionResult,
-    ExecutionMetrics, ExecutionQueueStatus, AgentExecutionStats
+    ExecutionMetrics as ExecutionMetricsSchema, ExecutionQueueStatus as ExecutionQueueStatusSchema,
+    AgentExecutionStats as AgentExecutionStatsSchema
 )
 from ..schemas.task import TaskStatus, TaskPriority, TaskUpdate
 from ..schemas.agent import AgentStatus
