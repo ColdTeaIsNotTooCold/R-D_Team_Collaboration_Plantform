@@ -26,6 +26,22 @@ class Settings(BaseSettings):
     cache_ttl: int = 3600  # 1 hour default cache time
     cache_prefix: str = "tcp:"
 
+    # Vector Database settings
+    vector_db_path: str = "./chroma_db"
+    vector_db_collection: str = "team_collaboration"
+    vector_db_impl: str = "duckdb+parquet"
+
+    # Embedding settings
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
+    embedding_batch_size: int = 32
+    embedding_cache_ttl: int = 7200  # 2 hours
+
+    # Vector search settings
+    vector_search_top_k: int = 5
+    vector_search_score_threshold: float = 0.7
+    vector_max_batch_size: int = 100
+
     # Security
     secret_key: str = Field(
         default="your-secret-key-change-in-production",
