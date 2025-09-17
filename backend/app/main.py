@@ -16,7 +16,7 @@ from .core.redis import get_redis
 from .core.vector_db import get_vector_db
 from .core.embeddings import get_embedding_generator
 from .core.executor_init import initialize_executor_services, shutdown_executor_services, get_executor_status
-from .api import users, agents, tasks, context, messages, vector, executor, scheduler
+from .api import users, agents, tasks, context, messages, vector, executor
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -307,7 +307,6 @@ app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
 app.include_router(executor.router, prefix="/api/v1/executor", tags=["executor"])
-app.include_router(scheduler.router, prefix="/api/v1/scheduler", tags=["scheduler"])
 
 if __name__ == "__main__":
     import uvicorn
