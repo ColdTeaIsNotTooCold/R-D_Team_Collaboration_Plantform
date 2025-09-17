@@ -30,10 +30,10 @@ export class ChatService {
   // 加载智能体列表
   async loadAgents(): Promise<void> {
     try {
-      const data = await agentsApi.getAgents()
-      this.agents = data
-      if (data.length > 0 && !this.selectedAgent) {
-        this.selectedAgent = data[0].id
+      const response = await agentsApi.getAgents()
+      this.agents = response.data
+      if (response.data.length > 0 && !this.selectedAgent) {
+        this.selectedAgent = response.data[0].id
       }
     } catch (error) {
       console.error('Failed to load agents:', error)

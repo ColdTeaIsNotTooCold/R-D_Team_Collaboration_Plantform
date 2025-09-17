@@ -40,12 +40,12 @@ class TaskRealtimeService {
     websocketService.on('error', this.handleWebSocketError.bind(this))
   }
 
-  private handleConnected() => {
+  private handleConnected() {
     this.reconnectAttempts = 0
     console.log('任务实时服务连接成功')
   }
 
-  private handleDisconnected() => {
+  private handleDisconnected() {
     console.log('任务实时服务连接断开')
     this.attemptReconnect()
   }
@@ -199,5 +199,4 @@ class TaskRealtimeService {
 // 创建单例实例
 export const taskRealtimeService = new TaskRealtimeService()
 
-// 导出类型
-export type { TaskUpdateEvent, TaskNotification }
+// 类型已经在前面导出，不需要重复导出

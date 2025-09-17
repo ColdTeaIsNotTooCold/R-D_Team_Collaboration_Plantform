@@ -1,6 +1,5 @@
 import React from 'react'
 import {
-  Tag,
   Space,
   Tooltip,
   Typography,
@@ -10,8 +9,7 @@ import {
 import {
   WifiOutlined,
   DisconnectOutlined,
-  ReloadOutlined,
-  ExclamationCircleOutlined
+  ReloadOutlined
 } from '@ant-design/icons'
 
 const { Text } = Typography

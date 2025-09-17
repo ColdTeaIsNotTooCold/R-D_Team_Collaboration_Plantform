@@ -210,3 +210,6 @@ export const initWebSocket = (): WebSocketClient => {
   client.connect()
   return client
 }
+
+// 为了向后兼容，导出websocketService别名
+export const websocketService = getWebSocketClient()
