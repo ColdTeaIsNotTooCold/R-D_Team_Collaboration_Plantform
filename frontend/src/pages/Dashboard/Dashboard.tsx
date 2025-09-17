@@ -11,9 +11,6 @@ import {
 } from 'antd'
 import {
   ReloadOutlined,
-  WifiOutlined,
-  DisconnectOutlined,
-  WarningOutlined,
   RocketOutlined,
   LineChartOutlined
 } from '@ant-design/icons'
@@ -25,9 +22,9 @@ import SystemOverview from '@/components/Dashboard/SystemOverview'
 import AgentMonitor from '@/components/Dashboard/AgentMonitor'
 import TaskOverview from '@/components/Dashboard/TaskOverview'
 import PerformanceMonitor from '@/components/Dashboard/PerformanceMonitor'
-import ErrorHandler, { DashboardSkeleton, StatusIndicator } from '@/components/Dashboard/ErrorHandler'
+import ErrorHandler, { StatusIndicator } from '@/components/Dashboard/ErrorHandler'
+import { WifiOutlined, DisconnectOutlined, WarningOutlined } from '@ant-design/icons'
 
-const { Text } = Typography
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
