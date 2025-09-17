@@ -4,7 +4,10 @@
       "Bash(dir \"E:\\ccpm-main\\.claude\\agents\")",
       "Bash(dir \"E:\\ccpm-main\\.claude\\commands\")",
       "Bash(dir \"E:\\ccpm-main\\.claude\\commands\" /s /b)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Read(//e//**)",
+      "Read(//e/team_collaboration_plantform-worktree/**)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
