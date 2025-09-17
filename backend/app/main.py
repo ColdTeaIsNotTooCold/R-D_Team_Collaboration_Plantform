@@ -18,6 +18,7 @@ from .core.embeddings import get_embedding_generator
 from .core.executor_init import initialize_executor_services, shutdown_executor_services, get_executor_status
 from .services.llm.manager import get_llm_manager
 from .api import users, agents, tasks, context, messages, vector, executor, llm
+from .api.vector import router as vector_router
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -341,6 +342,7 @@ app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
+app.include_router(vector_router, prefix="/api/v1/vector/enhanced", tags=["vector-enhanced"])
 app.include_router(executor.router, prefix="/api/v1/executor", tags=["executor"])
 app.include_router(llm.router, prefix="/api/v1/llm", tags=["llm"])
 
