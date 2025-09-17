@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
+import logging
 
 from ..core.database import get_db
 from ..core.search import SearchEngine
@@ -9,6 +10,8 @@ from ..schemas.search import (
     SearchQuery, SearchResponse, SearchType, SortOrder,
     VectorSearchConfig, IndexDocument, BatchIndexRequest, IndexResponse
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -226,11 +229,28 @@ async def remove_document_from_index(
 ):
     """从索引中移除文档"""
     try:
-        # 这里将在ChromaDB集成后实现
-        return {
-            "success": True,
-            "message": f"文档 {document_id} 已从索引中移除"
-        }
+        search_engine = SearchEngine(db)
+
+        if search_engine.chroma_client:
+            try:
+                collection = search_engine.chroma_client.get_collection(name="contexts")
+                collection.delete(ids=[f"context_{document_id}"])
+
+                return {
+                    "success": True,
+                    "message": f"文档 {document_id} 已从索引中移除"
+                }
+            except Exception as e:
+                logger.error(f"从向量数据库移除文档失败: {str(e)}")
+                return {
+                    "success": False,
+                    "message": f"移除文档索引失败: {str(e)}"
+                }
+        else:
+            return {
+                "success": False,
+                "message": "向量数据库未连接"
+            }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

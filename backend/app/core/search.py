@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, text
 import re
 from dataclasses import dataclass
+import chromadb
+from chromadb.utils import embedding_functions
+import numpy as np
 
 from ..models.context import Context
 from ..schemas.search import (
@@ -31,7 +34,25 @@ class SearchEngine:
     def __init__(self, db: Session):
         self.db = db
         self.chroma_client = None
-        self.embedding_model = None
+        self.embedding_function = None
+        self._initialize_chromadb()
+
+    def _initialize_chromadb(self):
+        """初始化ChromaDB客户端"""
+        try:
+            # 使用持久化客户端
+            self.chroma_client = chromadb.PersistentClient(path="./chroma_db")
+
+            # 初始化嵌入函数
+            self.embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name="all-MiniLM-L6-v2"
+            )
+
+            logger.info("ChromaDB客户端初始化成功")
+        except Exception as e:
+            logger.error(f"ChromaDB初始化失败: {str(e)}")
+            self.chroma_client = None
+            self.embedding_function = None
 
     async def search(self, query: SearchQuery) -> SearchResponse:
         """执行搜索"""
@@ -134,9 +155,70 @@ class SearchEngine:
 
     async def _semantic_search(self, query: SearchQuery) -> List[SearchResult]:
         """语义搜索"""
-        # 暂时返回空结果，等待ChromaDB集成
-        logger.warning("语义搜索尚未完全实现，返回空结果")
-        return []
+        if not self.chroma_client or not self.embedding_function:
+            logger.warning("ChromaDB未初始化，无法执行语义搜索")
+            return []
+
+        try:
+            # 获取或创建集合
+            collection_name = "contexts"
+            try:
+                collection = self.chroma_client.get_collection(name=collection_name)
+            except Exception:
+                collection = self.chroma_client.create_collection(
+                    name=collection_name,
+                    embedding_function=self.embedding_function
+                )
+
+            # 执行向量搜索
+            query_results = collection.query(
+                query_texts=[query.query],
+                n_results=50,  # 获取更多结果用于后续过滤
+                where=self._build_chroma_filter(query)
+            )
+
+            # 处理搜索结果
+            results = []
+            if query_results and query_results['ids']:
+                for i, doc_id in enumerate(query_results['ids'][0]):
+                    try:
+                        context_id = int(doc_id.split('_')[1])  # 假设ID格式为"context_{id}"
+                        context = self.db.query(Context).filter(Context.id == context_id).first()
+
+                        if context:
+                            score = query_results['distances'][0][i] if 'distances' in query_results else 0.0
+                            # 转换距离为相似度分数
+                            similarity_score = max(0.0, 1.0 - (score / 2.0))
+
+                            metadata_dict = {}
+                            if context.metadata:
+                                try:
+                                    metadata_dict = json.loads(context.metadata)
+                                except json.JSONDecodeError:
+                                    pass
+
+                            result = SearchResult(
+                                id=context.id,
+                                context_type=context.context_type,
+                                title=context.title,
+                                content=context.content,
+                                metadata=metadata_dict,
+                                score=similarity_score,
+                                highlights=self._extract_semantic_highlights(context, query.query),
+                                created_at=context.created_at,
+                                task_id=context.task_id,
+                                conversation_id=context.conversation_id
+                            )
+                            results.append(result)
+                    except Exception as e:
+                        logger.error(f"处理语义搜索结果失败: {str(e)}")
+                        continue
+
+            return results
+
+        except Exception as e:
+            logger.error(f"语义搜索执行失败: {str(e)}")
+            return []
 
     async def _hybrid_search(self, query: SearchQuery) -> List[SearchResult]:
         """混合搜索"""
@@ -231,12 +313,90 @@ class SearchEngine:
         # 按分数重新排序
         return sorted(merged_results, key=lambda x: x.score, reverse=True)
 
+    def _build_chroma_filter(self, query: SearchQuery) -> Dict[str, Any]:
+        """构建ChromaDB过滤条件"""
+        filters = {}
+
+        if query.context_types:
+            filters["context_type"] = {"$in": query.context_types}
+
+        if query.task_id:
+            filters["task_id"] = query.task_id
+
+        if query.conversation_id:
+            filters["conversation_id"] = query.conversation_id
+
+        return filters if filters else None
+
+    def _extract_semantic_highlights(self, context: Context, query: str) -> List[str]:
+        """提取语义搜索高亮"""
+        highlights = []
+        content = context.content or ""
+
+        if not content:
+            return highlights
+
+        # 简单的语义高亮：查找包含查询词相关词汇的句子
+        query_words = set(self._extract_keywords(query))
+        sentences = re.split(r'[.!?。！？]', content)
+
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if sentence:
+                # 检查句子中是否包含查询相关词汇
+                sentence_words = set(self._extract_keywords(sentence))
+                if query_words & sentence_words:  # 有交集
+                    if len(sentence) > 100:
+                        start = max(0, sentence.find(' ') if ' ' in sentence[:50] else 0)
+                        highlights.append(sentence[start:start+100] + "...")
+                    else:
+                        highlights.append(sentence)
+
+        return highlights[:3]
+
     async def index_document(self, document: IndexDocument, config: Optional[VectorSearchConfig] = None) -> bool:
         """索引单个文档"""
+        if not self.chroma_client or not self.embedding_function:
+            logger.warning("ChromaDB未初始化，无法索引文档")
+            return False
+
         try:
-            # 这里将在后续集成ChromaDB时实现
-            logger.info(f"索引文档: {document.id} - {document.title}")
+            collection_name = config.collection_name if config else "contexts"
+
+            # 获取或创建集合
+            try:
+                collection = self.chroma_client.get_collection(name=collection_name)
+            except Exception:
+                collection = self.chroma_client.create_collection(
+                    name=collection_name,
+                    embedding_function=self.embedding_function
+                )
+
+            # 准备文档数据
+            doc_id = f"context_{document.id}"
+            metadata = {
+                "context_id": document.id,
+                "context_type": document.context_type,
+                "title": document.title,
+                **document.metadata
+            }
+
+            # 添加任务和对话ID到元数据
+            if document.metadata.get("task_id"):
+                metadata["task_id"] = document.metadata["task_id"]
+            if document.metadata.get("conversation_id"):
+                metadata["conversation_id"] = document.metadata["conversation_id"]
+
+            # 添加文档到向量数据库
+            collection.add(
+                documents=[document.content],
+                metadatas=[metadata],
+                ids=[doc_id]
+            )
+
+            logger.info(f"成功索引文档: {document.id} - {document.title}")
             return True
+
         except Exception as e:
             logger.error(f"索引文档失败: {str(e)}")
             return False
@@ -270,15 +430,27 @@ class SearchEngine:
         """获取搜索统计信息"""
         try:
             total_contexts = self.db.query(func.count(Context.id)).scalar()
+            indexed_count = 0
+
+            # 获取向量数据库中的文档数量
+            if self.chroma_client:
+                try:
+                    collection = self.chroma_client.get_collection(name="contexts")
+                    count = collection.count()
+                    indexed_count = count
+                except Exception:
+                    indexed_count = 0
 
             stats = {
                 "total_documents": total_contexts,
-                "indexed_documents": 0,  # 将在ChromaDB集成后更新
+                "indexed_documents": indexed_count,
+                "indexing_rate": f"{(indexed_count / max(total_contexts, 1) * 100):.1f}%",
                 "search_types": {
                     "keyword": "available",
-                    "semantic": "pending",
-                    "hybrid": "available"
+                    "semantic": "available" if self.chroma_client else "pending",
+                    "hybrid": "available" if self.chroma_client else "pending"
                 },
+                "chromadb_status": "connected" if self.chroma_client else "disconnected",
                 "last_updated": time.time()
             }
 
