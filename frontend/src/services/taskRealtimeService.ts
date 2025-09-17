@@ -168,12 +168,12 @@ class TaskRealtimeService {
 
   // 手动发送任务更新（用于测试）
   sendTaskUpdate(event: TaskUpdateEvent) {
-    websocketService.send('task_update', event)
+    websocketService.send(event)
   }
 
   // 手动发送任务通知（用于测试）
   sendTaskNotification(notification: TaskNotification) {
-    websocketService.send('task_notification', notification)
+    websocketService.send(notification)
   }
 
   // 获取连接状态

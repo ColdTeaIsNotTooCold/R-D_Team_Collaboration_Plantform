@@ -6,8 +6,7 @@ import {
   Button,
   Space,
   Tabs,
-  Badge,
-  Typography
+  Badge
 } from 'antd'
 import {
   ReloadOutlined,
@@ -23,7 +22,6 @@ import AgentMonitor from '@/components/Dashboard/AgentMonitor'
 import TaskOverview from '@/components/Dashboard/TaskOverview'
 import PerformanceMonitor from '@/components/Dashboard/PerformanceMonitor'
 import ErrorHandler, { StatusIndicator } from '@/components/Dashboard/ErrorHandler'
-import { WifiOutlined, DisconnectOutlined, WarningOutlined } from '@ant-design/icons'
 
 
 const Dashboard: React.FC = () => {
@@ -37,11 +35,11 @@ const Dashboard: React.FC = () => {
     uptime: '0分钟'
   })
   const [performance, setPerformance] = useState({
-    cpu: 0,
-    memory: 0,
-    disk: 0,
-    network: 0,
-    system: 0
+    cpu: { usage: 0, temperature: 0, cores: 4, frequency: 2.4 },
+    memory: { usage: 0, total: 16, available: 16, used: 0 },
+    disk: { usage: 0, total: 500, available: 500, readSpeed: 0, writeSpeed: 0 },
+    network: { latency: 0, packetLoss: 0, downloadSpeed: 0, uploadSpeed: 0 },
+    system: { load: 0, processes: 0, uptime: 0 }
   })
   const [connectionStatus, setConnectionStatus] = useState({ connected: false, reconnecting: false })
   const [error, setError] = useState<Error | string | null>(null)
@@ -104,7 +102,7 @@ const Dashboard: React.FC = () => {
   const setupRealtimeService = () => {
     // 连接状态监听
     realtimeService.onConnectionChange((status) => {
-      setConnectionStatus(status)
+      setConnectionStatus({ ...status, reconnecting: false })
     })
 
     // Agent更新监听

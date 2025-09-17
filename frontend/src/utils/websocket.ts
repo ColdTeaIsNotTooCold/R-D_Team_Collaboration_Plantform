@@ -138,6 +138,10 @@ export class WebSocketClient {
     this.listeners.get(event)!.push(callback)
   }
 
+  subscribe(event: string, callback: Function) {
+    this.on(event, callback)
+  }
+
   off(event: string, callback: Function) {
     const callbacks = this.listeners.get(event)
     if (callbacks) {
@@ -146,6 +150,10 @@ export class WebSocketClient {
         callbacks.splice(index, 1)
       }
     }
+  }
+
+  unsubscribe(event: string) {
+    this.listeners.delete(event)
   }
 
   private emit(event: string, data?: any) {
