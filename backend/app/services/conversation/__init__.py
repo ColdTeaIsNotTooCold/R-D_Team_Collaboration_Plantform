@@ -6,9 +6,13 @@
 from .history import ConversationHistoryManager
 from .context import SmartContextManager
 from .session import SessionManager
+from .compression import ContextCompressionManager
+from .rag_integration import RAGLLMIntegration
 
 __all__ = [
     "ConversationHistoryManager",
     "SmartContextManager",
     "SessionManager",
+    "ContextCompressionManager",
+    "RAGLLMIntegration",
 ]
