@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"E:\\ccpm-main\\.claude\\agents\")",
+      "Bash(dir \"E:\\ccpm-main\\.claude\\commands\")",
+      "Bash(dir \"E:\\ccpm-main\\.claude\\commands\" /s /b)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
