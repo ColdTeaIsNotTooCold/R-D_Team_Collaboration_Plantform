@@ -56,7 +56,25 @@ else
     if [ "$task_status" = "closed" ] || [ "$task_status" = "completed" ]; then
       ((closed++))
     elif [ -n "$deps" ] && [ "$deps" != "depends_on:" ]; then
-      ((blocked++))
+      # Check if all dependencies are completed
+      deps_blocked=false
+      for dep in $(echo "$deps" | tr ',' ' '); do
+        dep_num=$(echo "$dep" | tr -d ' ')
+        dep_file="$epic_dir/${dep_num}-*.md"
+        if [ -f "$dep_file" ]; then
+          dep_status=$(grep "^status:" "$dep_file" | head -1 | sed 's/^status: *//')
+          if [ "$dep_status" != "closed" ] && [ "$dep_status" != "completed" ]; then
+            deps_blocked=true
+            break
+          fi
+        fi
+      done
+
+      if [ "$deps_blocked" = true ]; then
+        ((blocked++))
+      else
+        ((open++))
+      fi
     else
       ((open++))
     fi
