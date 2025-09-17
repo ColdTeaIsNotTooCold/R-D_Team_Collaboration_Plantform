@@ -269,8 +269,6 @@ app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
-app.include_router(search.router, prefix="/api/v1/search", tags=["search"])
-app.include_router(documents.router, prefix="/api/v1", tags=["documents"])
 
 if __name__ == "__main__":
     import uvicorn
