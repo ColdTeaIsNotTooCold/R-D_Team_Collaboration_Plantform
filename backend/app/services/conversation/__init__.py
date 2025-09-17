@@ -8,6 +8,8 @@ from .context import SmartContextManager
 from .session import SessionManager
 from .compression import ContextCompressionManager
 from .rag_integration import RAGLLMIntegration
+from .search import ConversationSearchEngine
+from .analytics import ConversationAnalyticsService
 
 __all__ = [
     "ConversationHistoryManager",
@@ -15,4 +17,6 @@ __all__ = [
     "SessionManager",
     "ContextCompressionManager",
     "RAGLLMIntegration",
+    "ConversationSearchEngine",
+    "ConversationAnalyticsService",
 ]

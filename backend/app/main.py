@@ -18,6 +18,7 @@ from .core.embeddings import get_embedding_generator
 from .core.executor_init import initialize_executor_services, shutdown_executor_services, get_executor_status
 from .services.llm.manager import get_llm_manager
 from .api import users, agents, tasks, context, messages, vector, executor, llm, rag
+from .api.conversation import conversation_router, session_router
 from .api.vector import router as vector_router
 
 # 配置日志
@@ -346,6 +347,8 @@ app.include_router(vector_router, prefix="/api/v1/vector/enhanced", tags=["vecto
 app.include_router(executor.router, prefix="/api/v1/executor", tags=["executor"])
 app.include_router(llm.router, prefix="/api/v1/llm", tags=["llm"])
 app.include_router(rag.router, prefix="/api/v1/rag", tags=["RAG"])
+app.include_router(conversation_router, prefix="/api/v1/conversations", tags=["conversations"])
+app.include_router(session_router, prefix="/api/v1/sessions", tags=["sessions"])
 
 if __name__ == "__main__":
     import uvicorn
