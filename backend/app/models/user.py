@@ -22,6 +22,7 @@ class User(Base):
     created_tasks = relationship("Task", back_populates="creator", foreign_keys="Task.creator_id")
     assigned_tasks = relationship("Task", back_populates="assignee", foreign_keys="Task.assignee_id")
     conversations = relationship("Conversation", back_populates="user")
+    sessions = relationship("ConversationSession", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
