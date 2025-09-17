@@ -38,8 +38,8 @@ const Dashboard: React.FC = () => {
     cpu: { usage: 0, temperature: 0, cores: 4, frequency: 2.4 },
     memory: { usage: 0, total: 16, available: 16, used: 0 },
     disk: { usage: 0, total: 500, available: 500, readSpeed: 0, writeSpeed: 0 },
-    network: { latency: 0, packetLoss: 0, downloadSpeed: 0, uploadSpeed: 0 },
-    system: { load: 0, processes: 0, uptime: 0 }
+    network: { latency: 0, downloadSpeed: 0, uploadSpeed: 0, packetLoss: 0 },
+    system: { uptime: '0分钟', loadAverage: [0, 0, 0], processes: 0, threads: 0 }
   })
   const [connectionStatus, setConnectionStatus] = useState({ connected: false, reconnecting: false })
   const [error, setError] = useState<Error | string | null>(null)
