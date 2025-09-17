@@ -15,7 +15,8 @@ from sqlalchemy.orm import Session
 from .core.redis import get_redis
 from .core.vector_db import get_vector_db
 from .core.embeddings import get_embedding_generator
-from .api import users, agents, tasks, context, messages, vector
+from .core.executor_init import initialize_executor_services, shutdown_executor_services, get_executor_status
+from .api import users, agents, tasks, context, messages, vector, executor
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -97,7 +98,8 @@ async def detailed_health_check():
         "components": {
             "database": "unknown",
             "redis": "unknown",
-            "system": "unknown"
+            "system": "unknown",
+            "executor": "unknown"
         },
         "uptime": "unknown"
     }
@@ -138,6 +140,19 @@ async def detailed_health_check():
 
     except Exception as e:
         health_status["components"]["system"] = f"error: {str(e)}"
+        health_status["status"] = "degraded"
+
+    try:
+        # 检查任务执行器状态
+        executor_status = get_executor_status()
+        health_status["components"]["executor"] = executor_status
+
+        # 如果执行器未初始化，标记为降级
+        if executor_status.get("task_executor") != "initialized":
+            health_status["status"] = "degraded"
+
+    except Exception as e:
+        health_status["components"]["executor"] = f"error: {str(e)}"
         health_status["status"] = "degraded"
 
     # 如果所有组件都健康，状态为healthy
@@ -259,7 +274,29 @@ async def startup_event():
     except Exception as e:
         logger.error(f"嵌入生成器初始化异常: {str(e)}")
 
+    # 初始化任务执行器服务
+    try:
+        await initialize_executor_services()
+        logger.info("任务执行器服务初始化成功")
+    except Exception as e:
+        logger.error(f"任务执行器服务初始化异常: {str(e)}")
+
     logger.info("应用启动完成")
+
+
+# 关闭事件
+@app.on_event("shutdown")
+async def shutdown_event():
+    """应用关闭时清理组件"""
+    logger.info("应用关闭，清理组件...")
+
+    try:
+        await shutdown_executor_services()
+        logger.info("任务执行器服务已关闭")
+    except Exception as e:
+        logger.error(f"任务执行器服务关闭异常: {str(e)}")
+
+    logger.info("应用关闭完成")
 
 
 # 包含路由
@@ -269,6 +306,7 @@ app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
+app.include_router(executor.router, prefix="/api/v1/executor", tags=["executor"])
 
 if __name__ == "__main__":
     import uvicorn

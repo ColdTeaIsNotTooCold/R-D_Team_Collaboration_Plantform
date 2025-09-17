@@ -35,6 +35,7 @@ class Task(Base):
     parent_task = relationship("Task", remote_side=[id], back_populates="subtasks")
     subtasks = relationship("Task", back_populates="parent_task")
     contexts = relationship("Context", back_populates="task")
+    executions = relationship("TaskExecution", back_populates="task")
 
     def __repr__(self):
         return f"<Task(id={self.id}, title='{self.title}', status='{self.status}')>"

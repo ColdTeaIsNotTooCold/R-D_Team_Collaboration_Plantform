@@ -42,6 +42,9 @@ class Agent(Base):
     owner = relationship("User", back_populates="agents")
     created_tasks = relationship("Task", back_populates="creator_agent", foreign_keys="Task.creator_agent_id")
     assigned_tasks = relationship("Task", back_populates="assigned_agent", foreign_keys="Task.assigned_agent_id")
+    executions = relationship("TaskExecution", back_populates="agent")
+    metrics = relationship("ExecutionMetrics", back_populates="agent")
+    workloads = relationship("AgentWorkload", back_populates="agent")
 
     def __repr__(self):
         return f"<Agent(id={self.id}, name='{self.name}', type='{self.agent_type}', status='{self.status}')>"
