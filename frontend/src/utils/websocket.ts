@@ -3,55 +3,102 @@ import type { Message } from '@/types'
 export class WebSocketClient {
   private ws: WebSocket | null = null
   private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
+  private maxReconnectAttempts = 10
   private reconnectInterval = 1000
   private listeners: Map<string, Function[]> = new Map()
   private url: string
+  private heartbeatInterval: number = 30000 // 30秒心跳间隔
+  private heartbeatTimer: NodeJS.Timeout | null = null
+  private connectionTimeout: number = 10000 // 10秒连接超时
+  private connectionTimer: NodeJS.Timeout | null = null
+  private messageQueue: any[] = [] // 消息队列
+  private isConnecting = false
 
   constructor(url: string) {
     this.url = url
   }
 
   connect() {
+    if (this.isConnecting || this.isConnected()) {
+      return
+    }
+
+    this.isConnecting = true
+
     try {
       this.ws = new WebSocket(this.url)
 
+      // 设置连接超时
+      this.connectionTimer = setTimeout(() => {
+        if (this.ws?.readyState === WebSocket.CONNECTING) {
+          this.ws.close()
+          this.emit('error', new Error('Connection timeout'))
+          this.reconnect()
+        }
+      }, this.connectionTimeout)
+
       this.ws.onopen = () => {
         console.log('WebSocket connected')
+        this.isConnecting = false
         this.reconnectAttempts = 0
+        this.clearConnectionTimer()
+        this.startHeartbeat()
+        this.flushMessageQueue()
         this.emit('connected')
       }
 
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
+
+          // 处理心跳响应
+          if (data.type === 'pong') {
+            return
+          }
+
           this.emit('message', data)
         } catch (error) {
           console.error('Error parsing WebSocket message:', error)
+          this.emit('error', new Error('Failed to parse message'))
         }
       }
 
-      this.ws.onclose = () => {
-        console.log('WebSocket disconnected')
-        this.emit('disconnected')
-        this.reconnect()
+      this.ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason)
+        this.isConnecting = false
+        this.clearConnectionTimer()
+        this.clearHeartbeat()
+        this.emit('disconnected', { code: event.code, reason: event.reason })
+
+        // 非正常关闭才重连
+        if (event.code !== 1000) {
+          this.reconnect()
+        }
       }
 
       this.ws.onerror = (error) => {
         console.error('WebSocket error:', error)
+        this.isConnecting = false
+        this.clearConnectionTimer()
         this.emit('error', error)
       }
     } catch (error) {
       console.error('Failed to connect WebSocket:', error)
+      this.isConnecting = false
+      this.clearConnectionTimer()
       this.reconnect()
     }
   }
 
   disconnect() {
+    this.clearConnectionTimer()
+    this.clearHeartbeat()
     if (this.ws) {
-      this.ws.close()
+      this.ws.close(1000, 'Disconnect requested')
       this.ws = null
     }
+    this.messageQueue = []
+    this.isConnecting = false
   }
 
   private reconnect() {
@@ -69,10 +116,19 @@ export class WebSocketClient {
 
   send(data: any) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data))
+      try {
+        this.ws.send(JSON.stringify(data))
+      } catch (error) {
+        console.error('Failed to send message:', error)
+        this.emit('error', error)
+        return false
+      }
     } else {
-      console.error('WebSocket is not connected')
+      console.warn('WebSocket is not connected, message queued')
+      this.messageQueue.push(data)
+      return false
     }
+    return true
   }
 
   on(event: string, callback: Function) {
@@ -101,6 +157,40 @@ export class WebSocketClient {
 
   isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN
+  }
+
+  private clearConnectionTimer() {
+    if (this.connectionTimer) {
+      clearTimeout(this.connectionTimer)
+      this.connectionTimer = null
+    }
+  }
+
+  private startHeartbeat() {
+    this.clearHeartbeat()
+    this.heartbeatTimer = setInterval(() => {
+      if (this.isConnected()) {
+        this.send({ type: 'ping', timestamp: Date.now() })
+      } else {
+        this.clearHeartbeat()
+      }
+    }, this.heartbeatInterval)
+  }
+
+  private clearHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = null
+    }
+  }
+
+  private flushMessageQueue() {
+    while (this.messageQueue.length > 0) {
+      const message = this.messageQueue.shift()
+      if (message) {
+        this.send(message)
+      }
+    }
   }
 }
 

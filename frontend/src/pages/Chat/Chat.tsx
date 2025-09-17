@@ -1,27 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
-import {
-  Card,
-  Input,
-  Button,
-  Select,
-  Space,
-  message,
-  Typography,
-  Spin
-} from 'antd'
-import {
-  SendOutlined,
-  RobotOutlined,
-  UserOutlined
-} from '@ant-design/icons'
+import { Card } from 'antd'
 import type { Message, Agent } from '@/types'
 import { agentsApi } from '@/api'
 import { initWebSocket } from '@/utils/websocket'
 import { MESSAGE_ROLE } from '@/constants'
-
-const { TextArea } = Input
-const { Option } = Select
-const { Text } = Typography
+import MessageList from '@/components/Chat/MessageList'
+import MessageInput from '@/components/Chat/MessageInput'
+import AgentSelector from '@/components/Chat/AgentSelector'
+import TypingIndicator from '@/components/Chat/TypingIndicator'
+import ConnectionStatus from '@/components/Chat/ConnectionStatus'
 
 const Chat: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -155,17 +142,7 @@ const Chat: React.FC = () => {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
-  const formatTime = (time: string) => {
-    return new Date(time).toLocaleTimeString()
-  }
-
+  
   const getAgentName = (agentId: string) => {
     const agent = agents.find(a => a.id === agentId)
     return agent?.name || '未知智能体'
@@ -174,123 +151,50 @@ const Chat: React.FC = () => {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Text strong>选择智能体：</Text>
-            <Select
-              value={selectedAgent}
-              onChange={setSelectedAgent}
-              style={{ width: 200 }}
-              placeholder="选择智能体"
-            >
-              {agents.map(agent => (
-                <Option key={agent.id} value={agent.id}>
-                  {agent.name}
-                </Option>
-              ))}
-            </Select>
-            <Text type={wsConnected ? 'success' : 'danger'}>
-              {wsConnected ? '已连接' : '未连接'}
-            </Text>
-          </Space>
+        {/* 连接状态和Agent选择 */}
+        <div style={{ marginBottom: '16px' }}>
+          <ConnectionStatus
+            isConnected={wsConnected}
+            onReconnect={initWebSocketConnection}
+          />
         </div>
 
+        <AgentSelector
+          agents={agents}
+          selectedAgent={selectedAgent}
+          onAgentChange={setSelectedAgent}
+          loading={!agents.length}
+        />
+
+        {/* 消息列表 */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{
             flex: 1,
             overflow: 'auto',
-            padding: '16px',
-            backgroundColor: '#f5f5f5',
-            borderRadius: '8px',
             marginBottom: '16px'
           }}>
-            {messages.length === 0 ? (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100%',
-                color: '#999'
-              }}>
-                <Text>开始与智能体对话吧！</Text>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  style={{
-                    marginBottom: '16px',
-                    display: 'flex',
-                    justifyContent: message.role === MESSAGE_ROLE.USER ? 'flex-end' : 'flex-start'
-                  }}
-                >
-                  <div style={{
-                    maxWidth: '70%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: message.role === MESSAGE_ROLE.USER ? 'flex-end' : 'flex-start'
-                  }}>
-                    <div style={{ marginBottom: '4px', fontSize: '12px', color: '#999' }}>
-                      {message.role === MESSAGE_ROLE.USER ? (
-                        <Space>
-                          <UserOutlined />
-                          <span>我</span>
-                          <span>{formatTime(message.timestamp)}</span>
-                        </Space>
-                      ) : message.role === MESSAGE_ROLE.ASSISTANT ? (
-                        <Space>
-                          <RobotOutlined />
-                          <span>{getAgentName(message.agentId!)}</span>
-                          <span>{formatTime(message.timestamp)}</span>
-                        </Space>
-                      ) : (
-                        <Text type="secondary">{formatTime(message.timestamp)}</Text>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        backgroundColor: message.role === MESSAGE_ROLE.USER ? '#1890ff' :
-                                         message.role === MESSAGE_ROLE.SYSTEM ? '#f0f0f0' : '#f6ffed',
-                        color: message.role === MESSAGE_ROLE.USER ? 'white' :
-                               message.role === MESSAGE_ROLE.SYSTEM ? '#999' : '#000',
-                        border: message.role === MESSAGE_ROLE.SYSTEM ? '1px solid #d9d9d9' : 'none'
-                      }}
-                    >
-                      {message.content}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+            <MessageList
+              messages={messages}
+              loading={loading}
+              getAgentName={getAgentName}
+            />
             <div ref={messagesEndRef} />
-            {loading && (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
-                <Spin />
-              </div>
-            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <TextArea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onPressEnter={handleKeyPress}
-              placeholder="输入消息..."
-              rows={2}
-              style={{ flex: 1 }}
-            />
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={handleSendMessage}
-              loading={loading}
-              style={{ height: 'auto' }}
-            >
-              发送
-            </Button>
-          </div>
+          {/* 消息输入 */}
+          <MessageInput
+            value={inputMessage}
+            onChange={setInputMessage}
+            onSend={handleSendMessage}
+            loading={loading}
+            disabled={!selectedAgent}
+            placeholder={selectedAgent ? '输入消息...' : '请先选择智能体'}
+            quickCommands={[
+              { label: 'help', value: '帮助', description: '获取帮助信息' },
+              { label: 'status', value: '状态', description: '查看当前状态' },
+              { label: 'clear', value: '清除对话', description: '清除当前对话历史' }
+            ]}
+          />
         </div>
       </Card>
     </div>
