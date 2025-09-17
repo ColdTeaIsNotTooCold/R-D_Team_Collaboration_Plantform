@@ -16,7 +16,8 @@ from .core.redis import get_redis
 from .core.vector_db import get_vector_db
 from .core.embeddings import get_embedding_generator
 from .core.executor_init import initialize_executor_services, shutdown_executor_services, get_executor_status
-from .api import users, agents, tasks, context, messages, vector, executor
+from .services.llm.manager import get_llm_manager
+from .api import users, agents, tasks, context, messages, vector, executor, llm
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -99,7 +100,8 @@ async def detailed_health_check():
             "database": "unknown",
             "redis": "unknown",
             "system": "unknown",
-            "executor": "unknown"
+            "executor": "unknown",
+            "llm": "unknown"
         },
         "uptime": "unknown"
     }
@@ -153,6 +155,20 @@ async def detailed_health_check():
 
     except Exception as e:
         health_status["components"]["executor"] = f"error: {str(e)}"
+        health_status["status"] = "degraded"
+
+    try:
+        # 检查LLM管理器状态
+        llm_manager = await get_llm_manager()
+        llm_status = await llm_manager.health_check()
+        health_status["components"]["llm"] = "healthy" if llm_status else "unhealthy"
+
+        # 如果LLM管理器未初始化，标记为降级
+        if not llm_status:
+            health_status["status"] = "degraded"
+
+    except Exception as e:
+        health_status["components"]["llm"] = f"error: {str(e)}"
         health_status["status"] = "degraded"
 
     # 如果所有组件都健康，状态为healthy
@@ -281,6 +297,17 @@ async def startup_event():
     except Exception as e:
         logger.error(f"任务执行器服务初始化异常: {str(e)}")
 
+    # 初始化LLM管理器
+    try:
+        llm_manager = await get_llm_manager()
+        success = await llm_manager.initialize()
+        if success:
+            logger.info("LLM管理器初始化成功")
+        else:
+            logger.error("LLM管理器初始化失败")
+    except Exception as e:
+        logger.error(f"LLM管理器初始化异常: {str(e)}")
+
     logger.info("应用启动完成")
 
 
@@ -296,6 +323,14 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"任务执行器服务关闭异常: {str(e)}")
 
+    # 关闭LLM管理器
+    try:
+        llm_manager = await get_llm_manager()
+        await llm_manager.close()
+        logger.info("LLM管理器已关闭")
+    except Exception as e:
+        logger.error(f"LLM管理器关闭异常: {str(e)}")
+
     logger.info("应用关闭完成")
 
 
@@ -307,6 +342,7 @@ app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
 app.include_router(executor.router, prefix="/api/v1/executor", tags=["executor"])
+app.include_router(llm.router, prefix="/api/v1/llm", tags=["llm"])
 
 if __name__ == "__main__":
     import uvicorn
