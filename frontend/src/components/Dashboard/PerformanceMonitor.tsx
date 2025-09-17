@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Card,
   Row,
@@ -9,11 +9,7 @@ import {
   Typography,
   Alert,
   Button,
-  Tooltip,
-  Badge,
-  List,
-  Avatar,
-  Divider
+  Badge
 } from 'antd'
 import {
   ThunderboltOutlined,
@@ -21,15 +17,12 @@ import {
   GlobalOutlined,
   ClockCircleOutlined,
   WarningOutlined,
-  CheckCircleOutlined,
   ReloadOutlined,
-  LineChartOutlined,
-  BarChartOutlined,
-  PieChartOutlined
+  LineChartOutlined
 } from '@ant-design/icons'
 import type { SystemStatus } from '@/types'
 
-const { Text, Title } = Typography
+const { Text } = Typography
 
 interface PerformanceMetrics {
   cpu: {
@@ -67,7 +60,7 @@ interface PerformanceMetrics {
 
 interface PerformanceMonitorProps {
   performance?: PerformanceMetrics
-  systemStatus: SystemStatus
+  systemStatus?: SystemStatus
   loading?: boolean
   onRefresh: () => void
 }
@@ -80,7 +73,6 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     network: { latency: 0, downloadSpeed: 0, uploadSpeed: 0, packetLoss: 0 },
     system: { uptime: '0分钟', loadAverage: [0, 0, 0], processes: 0, threads: 0 }
   },
-  systemStatus,
   loading = false,
   onRefresh
 }) => {
@@ -100,32 +92,9 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     return '#52c41a'
   }
 
-  const getStatusText = (value: number, type: 'cpu' | 'memory' | 'disk' | 'network') => {
-    const thresholds = {
-      cpu: { warning: 70, critical: 85 },
-      memory: { warning: 75, critical: 90 },
-      disk: { warning: 80, critical: 95 },
-      network: { warning: 100, critical: 200 }
-    }
-
-    const threshold = thresholds[type]
-    if (value >= threshold.critical) return '严重'
-    if (value >= threshold.warning) return '警告'
-    return '正常'
-  }
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B'
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
-
-  const formatSpeed = (speed: number) => {
-    return formatBytes(speed) + '/s'
-  }
-
+  
+  
+  
   const getAlerts = () => {
     const alerts = []
 

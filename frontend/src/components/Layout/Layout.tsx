@@ -3,7 +3,7 @@ import { Layout as AntLayout, Menu, theme } from 'antd'
 import {
   DashboardOutlined,
   RobotOutlined,
-  TaskOutlined,
+  UnorderedListOutlined,
   MessageOutlined,
   SettingOutlined
 } from '@ant-design/icons'
@@ -35,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
     {
       key: '/tasks',
-      icon: <TaskOutlined />,
+      icon: <UnorderedListOutlined />,
       label: '任务管理',
     },
     {

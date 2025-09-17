@@ -13,7 +13,8 @@ import {
   Avatar,
   Typography,
   Tooltip,
-  Badge
+  Badge,
+  Modal
 } from 'antd'
 import {
   CheckCircleOutlined,
@@ -24,7 +25,8 @@ import {
   ExportOutlined,
   EyeOutlined,
   UserOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  ReloadOutlined
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Task } from '@/types'
@@ -36,14 +38,12 @@ interface TaskOverviewProps {
   tasks: Task[]
   loading?: boolean
   onRefresh: () => void
-  onTaskAction?: (taskId: string, action: string) => void
 }
 
 const TaskOverview: React.FC<TaskOverviewProps> = ({
   tasks,
   loading = false,
-  onRefresh,
-  onTaskAction
+  onRefresh
 }) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [detailModalVisible, setDetailModalVisible] = useState(false)

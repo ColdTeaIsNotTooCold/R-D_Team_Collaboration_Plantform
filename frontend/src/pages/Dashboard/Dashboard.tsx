@@ -5,8 +5,6 @@ import {
   Col,
   Button,
   Space,
-  Alert,
-  Spin,
   Tabs,
   Badge,
   Typography
@@ -319,7 +317,6 @@ const Dashboard: React.FC = () => {
             key="performance"
           >
             <PerformanceMonitor
-              systemStatus={systemStatus}
               performance={performance}
               loading={loading}
               onRefresh={handleRefresh}

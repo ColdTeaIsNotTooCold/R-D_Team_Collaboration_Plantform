@@ -8,7 +8,9 @@ import {
   Modal,
   message,
   Tooltip,
-  Badge
+  Badge,
+  Row,
+  Col
 } from 'antd'
 import {
   PlayCircleOutlined,
