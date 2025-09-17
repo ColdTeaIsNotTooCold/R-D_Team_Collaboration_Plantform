@@ -1,1 +1,1 @@
-from . import users, agents, tasks, context
+from . import users, agents, tasks, context, search

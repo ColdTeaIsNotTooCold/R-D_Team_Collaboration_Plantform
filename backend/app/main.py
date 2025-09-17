@@ -13,7 +13,9 @@ from .core.config import settings
 from .core.database import engine, Base, get_db
 from sqlalchemy.orm import Session
 from .core.redis import get_redis
-from .api import users, agents, tasks, context, messages, vector
+from .core.vector_db import get_vector_db
+from .core.embeddings import get_embedding_generator
+from .api import users, agents, tasks, context, messages, vector, search
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -229,6 +231,37 @@ async def root():
         "docs": "/docs"
     }
 
+# 启动事件
+@app.on_event("startup")
+async def startup_event():
+    """应用启动时初始化组件"""
+    logger.info("应用启动，初始化组件...")
+
+    # 初始化向量数据库
+    try:
+        vector_db = await get_vector_db()
+        success = await vector_db.initialize()
+        if success:
+            logger.info("向量数据库初始化成功")
+        else:
+            logger.error("向量数据库初始化失败")
+    except Exception as e:
+        logger.error(f"向量数据库初始化异常: {str(e)}")
+
+    # 初始化嵌入生成器
+    try:
+        embedding_generator = await get_embedding_generator()
+        success = await embedding_generator.initialize()
+        if success:
+            logger.info("嵌入生成器初始化成功")
+        else:
+            logger.error("嵌入生成器初始化失败")
+    except Exception as e:
+        logger.error(f"嵌入生成器初始化异常: {str(e)}")
+
+    logger.info("应用启动完成")
+
+
 # 包含路由
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["agents"])
@@ -236,6 +269,7 @@ app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(vector.router, prefix="/api/v1/vector", tags=["vector"])
+app.include_router(search.router, prefix="/api/v1/search", tags=["search"])
 
 if __name__ == "__main__":
     import uvicorn
