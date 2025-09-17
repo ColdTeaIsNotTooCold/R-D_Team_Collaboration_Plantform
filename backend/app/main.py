@@ -13,7 +13,7 @@ from .core.config import settings
 from .core.database import engine, Base, get_db
 from sqlalchemy.orm import Session
 from .core.redis import get_redis
-from .api import users, agents, tasks, context
+from .api import users, agents, tasks, context, messages
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -234,6 +234,7 @@ app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["agents"])
 app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(context.router, prefix="/api/v1/contexts", tags=["contexts"])
+app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 
 if __name__ == "__main__":
     import uvicorn
