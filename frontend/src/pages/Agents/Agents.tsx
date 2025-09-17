@@ -40,8 +40,8 @@ const Agents: React.FC = () => {
   const fetchAgents = async () => {
     try {
       setLoading(true)
-      const data = await agentsApi.getAgents()
-      setAgents(data)
+      const response = await agentsApi.getAgents()
+      setAgents(response.data)
     } catch (error) {
       message.error('获取智能体列表失败')
     } finally {

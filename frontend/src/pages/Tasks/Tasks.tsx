@@ -34,7 +34,8 @@ import dayjs from 'dayjs'
 
 // 导入新组件
 import TaskDetail from '@/components/Tasks/TaskDetail'
-import TaskFilters, { TaskFilters as TaskFiltersType } from '@/components/Tasks/TaskFilters'
+import TaskFilters from '@/components/Tasks/TaskFilters'
+import type { TaskFilters as TaskFiltersType } from '@/components/Tasks/TaskFilters'
 import TaskBatchActions from '@/components/Tasks/TaskBatchActions'
 import { taskRealtimeService, type TaskUpdateEvent } from '@/services/taskRealtimeService'
 
@@ -75,9 +76,9 @@ const Tasks: React.FC = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true)
-      const data = await tasksApi.getTasks()
-      setTasks(data)
-      setFilteredTasks(data)
+      const response = await tasksApi.getTasks()
+      setTasks(response.data)
+      setFilteredTasks(response.data)
     } catch (error) {
       message.error('获取任务列表失败')
     } finally {
@@ -179,8 +180,8 @@ const Tasks: React.FC = () => {
 
   const fetchAgents = async () => {
     try {
-      const data = await agentsApi.getAgents()
-      setAgents(data)
+      const response = await agentsApi.getAgents()
+      setAgents(response.data)
     } catch (error) {
       console.error('获取智能体列表失败:', error)
     }

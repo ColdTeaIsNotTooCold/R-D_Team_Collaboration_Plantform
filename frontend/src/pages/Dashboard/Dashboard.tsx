@@ -40,7 +40,8 @@ const Dashboard: React.FC = () => {
     cpu: 0,
     memory: 0,
     disk: 0,
-    network: 0
+    network: 0,
+    system: 0
   })
   const [connectionStatus, setConnectionStatus] = useState({ connected: false, reconnecting: false })
   const [error, setError] = useState<Error | string | null>(null)
@@ -60,14 +61,14 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      const [agentsData, tasksData] = await Promise.all([
+      const [agentsResponse, tasksResponse] = await Promise.all([
         agentsApi.getAgents(),
         tasksApi.getTasks()
       ])
 
-      setAgents(agentsData)
-      setTasks(tasksData)
-      updateSystemStatus(agentsData, tasksData)
+      setAgents(agentsResponse.data)
+      setTasks(tasksResponse.data)
+      updateSystemStatus(agentsResponse.data, tasksResponse.data)
     } catch (error) {
       console.error('获取数据失败:', error)
       setError(error instanceof Error ? error : '获取数据失败')
@@ -216,7 +217,7 @@ const Dashboard: React.FC = () => {
               </Space>
             </Col>
             <Col xs={24} sm={8}>
-              <div style={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, marginTop: { xs: 8, sm: 0 } }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 0 }}>
                 <Space>
                   <Button
                     type="primary"
