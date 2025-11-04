@@ -372,62 +372,6 @@ GitHub 不需要知道工作是如何完成的——只需要知道它完成了�
 /pm:epic-show memory-system
 ```
 
-## 立即开始
-
-### 快速设置（2 分钟）
-
-1. **将此存储库安装到您的项目中**：
-
-   #### Unix/Linux/macOS
-
-   ```bash
-   cd path/to/your/project/
-   curl -sSL https://raw.githubusercontent.com/automazeio/ccpm/main/ccpm.sh | bash
-   # 或者：wget -qO- https://raw.githubusercontent.com/automazeio/ccpm/main/ccpm.sh | bash
-   ```
-
-   #### Windows (PowerShell)
-   ```bash
-   cd path/to/your/project/
-   iwr -useb https://raw.githubusercontent.com/automazeio/ccpm/main/ccpm.bat | iex
-   ```
-   > ⚠️ **重要**：如果您已经有 `.claude` 目录，请将此存储库克隆到不同的目录，并将克隆的 `.claude` 目录的内容复制到您项目的 `.claude` 目录中。
-
-   在[安装指南 ›](https://github.com/automazeio/ccpm/tree/main/install) 中查看完整/其他安装选项
-
-
-2. **初始化 PM 系统**：
-   ```bash
-   /pm:init
-   ```
-   此命令将：
-   - 安装 GitHub CLI（如果需要）
-   - 使用 GitHub 进行身份验证
-   - 安装 [gh-sub-issue 扩展](https://github.com/yahsan2/gh-sub-issue) 以实现正确的父子关系
-   - 创建所需的目录
-   - 更新 .gitignore
-
-3. **创建 `CLAUDE.md`** 包含您的存储库信息
-   ```bash
-   /init include rules from .claude/CLAUDE.md
-   ```
-   > 如果您已经有 `CLAUDE.md` 文件，请运行：`/re-init` 以使用 `.claude/CLAUDE.md` 中的重要规则更新它。
-
-4. **准备系统**：
-   ```bash
-   /context:create
-   ```
-
-
-
-### 开始您的第一个功能
-
-```bash
-/pm:prd-new your-feature-name
-```
-
-观看结构化规划如何转变为交付的代码。
-
 ## 本地与远程
 
 | 操作 | 本地 | GitHub |
